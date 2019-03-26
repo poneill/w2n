@@ -34,12 +34,14 @@ american_number_system = {
     'thousand': 1000,
     'million': 1000000,
     'billion': 1000000000,
+    'trillion': 1000000000000,
     'point': '.'
 }
 
 decimal_words = ['zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine']
 
 three_digit_postfixes = {
+    'trillion': 10**12,
     'billion': 10**9,
     'million': 10**6,
     'thousand': 10**3
@@ -160,20 +162,19 @@ def word_to_num(number_sentence):
     if len(clean_numbers) == 0:
         raise ValueError("No valid number words found! Please enter a valid number word (eg. two million twenty three thousand and forty nine)")
 
-    # Error if user enters million,billion, thousand or decimal point twice
-    if clean_numbers.count('thousand') > 1 or clean_numbers.count('million') > 1 or clean_numbers.count('billion') > 1 or clean_numbers.count('point')> 1:
-        raise ValueError("Redundant number word! Please enter a valid number word (eg. two million twenty three thousand and forty nine)")
 
     # separate decimal part of number (if exists)
     if clean_numbers.count('point') == 1:
         clean_decimal_numbers = clean_numbers[clean_numbers.index('point')+1:]
         clean_numbers = clean_numbers[:clean_numbers.index('point')]
 
-    billion_index = clean_numbers.index('billion') if 'billion' in clean_numbers else -1
-    million_index = clean_numbers.index('million') if 'million' in clean_numbers else -1
-    thousand_index = clean_numbers.index('thousand') if 'thousand' in clean_numbers else -1
-    if (thousand_index > -1 and (thousand_index < million_index or thousand_index < billion_index)) or (million_index>-1 and million_index < billion_index):
-        raise ValueError("Malformed number! Please enter a valid number word (eg. two million twenty three thousand and forty nine)")
+    # billion_index = clean_numbers.index('billion') if 'billion' in clean_numbers else -1
+    # million_index = clean_numbers.index('million') if 'million' in clean_numbers else -1
+    # thousand_index = clean_numbers.index('thousand') if 'thousand' in clean_numbers else -1
+    _validate_clean_numbers(clean_numbers)
+
+    # if (thousand_index > -1 and (thousand_index < million_index or thousand_index < billion_index)) or (million_index>-1 and million_index < billion_index):
+    #     raise ValueError("Malformed number! Please enter a valid number word (eg. two million twenty three thousand and forty nine)")
 
     #  groups represents clean_numbers, split into three digit groupings.
     # e.g. ['two', 'million', 'twenty', 'three', 'thousand', 'forty', 'nine'] =>
@@ -209,3 +210,26 @@ def word_to_num(number_sentence):
         total_sum += decimal_sum
 
     return total_sum
+
+
+def _validate_clean_numbers(clean_numbers):
+    """Make sure that 'millions', 'billions' &c. don't occur out of order."""
+
+        # Error if user enters million,billion, thousand or decimal point twice
+    unique_words = list(three_digit_postfixes.keys()) + ['point']
+    if any(clean_numbers.count(w) > 1 for w in unique_words):
+        raise ValueError("Redundant number word! Please enter a valid number word (eg. two million twenty three thousand and forty nine)")
+
+    three_digit_indices = {
+        w: clean_numbers.index(w)
+        for w in three_digit_postfixes
+        if w in clean_numbers
+    }
+    for w1, idx1 in three_digit_indices.items():
+        val1 = three_digit_postfixes[w1]
+        for w2, idx2 in three_digit_indices.items():
+            val2 = three_digit_postfixes[w2]
+            one_before_two = (val1 <= val2)
+            one_greater_than_two = (idx1 >= idx2)
+            if not one_before_two == one_greater_than_two:
+                raise ValueError("Malformed number! Please enter a valid number word (eg. two million twenty three thousand and forty nine)")
