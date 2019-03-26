@@ -31,10 +31,10 @@ american_number_system = {
     'eighty': 80,
     'ninety': 90,
     'hundred': 100,
-    'thousand': 1000,
-    'million': 1000000,
-    'billion': 1000000000,
-    'trillion': 1000000000000,
+    'thousand': 10**3,
+    'million': 10**6,
+    'billion': 10**9,
+    'trillion': 10**12,
     'point': '.'
 }
 
