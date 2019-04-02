@@ -1,5 +1,6 @@
 from __future__ import print_function
 
+from decimal import Decimal
 
 american_number_system = {
     'zero': 0,
@@ -86,13 +87,13 @@ indian_number_system = {
 }
 """
 
-
 """
 function to form numeric multipliers for million, billion, thousand etc.
 
 input: list of strings
 return value: integer
 """
+
 
 
 def number_formation(number_words):
@@ -127,7 +128,7 @@ def get_decimal_sum(decimal_digit_words):
         else:
             decimal_number_str.append(american_number_system[dec_word])
     final_decimal_string = '0.' + ''.join(map(str,decimal_number_str))
-    return float(final_decimal_string)
+    return Decimal(final_decimal_string)
 
 
 """
@@ -145,7 +146,7 @@ def word_to_num(number_sentence):
     number_sentence = number_sentence.lower()  # converting input to lowercase
 
     if(number_sentence.isdigit()):  # return the number if user enters a number string
-        return int(number_sentence)
+        return Decimal(number_sentence)
 
     split_words = number_sentence.strip().split()  # strip extra spaces and split sentence into words
 
@@ -189,7 +190,7 @@ def word_to_num(number_sentence):
     if group:
         groups.append(group)
 
-    total_sum = 0  # storing the number to be returned
+    total_sum = Decimal(0)  # storing the number to be returned
     for group in groups:
         if group[-1] in three_digit_postfixes:
             three_digit_number_word, postfix = group[:-1], group[-1]
@@ -206,9 +207,13 @@ def word_to_num(number_sentence):
 
     # adding decimal part to total_sum (if exists)
     if len(clean_decimal_numbers) > 0:
+        #  we multiply and divide by roundoff constant in order to add
+        #  total_sum and decimal_sum far away from 1.0, in order to
+        #  avoid roundoff error
         decimal_sum = get_decimal_sum(clean_decimal_numbers)
         total_sum += decimal_sum
 
+    total_sum = _from_decimal(total_sum)
     return total_sum
 
 
@@ -233,3 +238,11 @@ def _validate_clean_numbers(clean_numbers):
             one_greater_than_two = (idx1 >= idx2)
             if not one_before_two == one_greater_than_two:
                 raise ValueError("Malformed number! Please enter a valid number word (eg. two million twenty three thousand and forty nine)")
+
+
+def _from_decimal(d):
+    """Convert decimal back to int or float."""
+    if (d - d.to_integral()).is_zero():
+        return int(d)
+    else:
+        return float(d)
